@@ -1,11 +1,80 @@
-from flask import Flask
+from flask import Flask,request
 import requests
 from bs4 import BeautifulSoup
-# app = Flask(__name__)
+import pandas as pd
+app = Flask(__name__)
 
-# @app.route('/')
-# def hello_world():
-#     return 'Hello World!'
+@app.route("/")
+def hi():
+    return 'hello'
+
+@app.route('/cal')
+def hello_world():
+    price_yesterday=request.args.get('today')
+    price_today=request.args.get('yesterday')
+    # price_yesterday = '19.76'  # 昨天收市价
+    # price_today = '20.31'  # 今天收市价
+    price_sum_yesterday = price_sum(price_yesterday)
+    price_sum_today = price_sum(price_today)
+    up = price_sum_yesterday % 8
+    down = price_sum_today % 8
+    up1 = up = 8 if up == 0 else up
+    down1 = down = 8 if down == 0 else down
+    change = (price_sum_yesterday + price_sum_today) % 6
+    change = 6 if change == 0 else change
+    # 从下到上依次是初爻、二爻、三爻、四爻、五爻、六爻
+    if change > 3:
+        up1 = str(bin(up1 - 1)).replace("0b", "")
+        up1 = len_append(up1)
+        change = change - 4
+        up1 = list(up1)
+        up1[change] = '1' if up1[change] == '0' else '0'
+        up1 = "".join(up1)
+        up1 = int(up1, 2) + 1
+    else:
+        down1 = str(bin(down1 - 1)).replace("0b", "")
+        down1 = len_append(down1)
+        change = change - 1
+        down1 = list(down1)
+        down1[change] = '1' if down1[change] == '0' else '0'
+        down1 = "".join(down1)
+        down1 = int(down1, 2) + 1
+    up2 = up
+    down2 = down
+    up2 = str(bin(up2 - 1)).replace("0b", "")
+    up2 = len_append(up2)
+    up2 = reverse(str(up2))
+    up2 = "".join(up2)
+    up2 = int(up2, 2) + 1
+    down2 = str(bin(down2 - 1)).replace("0b", "")
+    down2 = len_append(down2)
+    down2 = reverse(down2)
+    down2 = "".join(down2)
+    down2 = int(down2, 2) + 1
+    # print(up1)
+    # print(down1)
+    # exit(0)
+
+    gua = open("static/" + str(up) + str(down), encoding='utf-8')
+    hugua = open("static/" + str(up2) + str(down2), encoding='utf-8')
+    biangua = open("static/" + str(up1) + str(down1), encoding='utf-8')
+    res = '<p>========原始卦========\n</p>'
+    for line in gua.readlines():
+        if line.__contains__('股市'):
+            res+='<p>'+line+'</p>'
+        # print(line, end="")
+    res+='\n\n\n\n\n\n========互卦========\n'
+    for line in hugua.readlines():
+        if line.__contains__('股市'):
+            res+='<p>'+line+'</p>'
+        # print(line, end="")
+    res+='\n\n\n\n\n\n========变卦========\n'
+    for line in biangua.readlines():
+        if line.__contains__('股市'):
+            res+='<p>'+line+'</p>'
+        # print(line, end="")
+    return res
+
 
 def price_sum(price):
     sum=0
@@ -14,12 +83,12 @@ def price_sum(price):
     return sum
 
 
-def lenAppend(num_str):
+def len_append(num_str):
     # if num_str.__len__()==3:
     #     return num_str
     if num_str.__len__()<3:
         num_str = '0'+num_str
-        return lenAppend(num_str)
+        return len_append(num_str)
     else: return num_str
 
 
@@ -31,8 +100,18 @@ def reverse(num_str):
 
 
 if __name__ == '__main__':
-    price_yesterday = '5.65' #昨天收市价
-    price_today = '5.54' #今天收市价
+    app.run()
+
+    import threading
+    mutex = threading.Lock()
+    cond1= threading.Condition(mutex)
+    mutex.acquire()
+    mutex.release()
+
+    '''
+    
+    price_yesterday = '19.76' #昨天收市价
+    price_today = '20.31' #今天收市价
     price_sum_yesterday = price_sum(price_yesterday)
     price_sum_today = price_sum(price_today)
     up = price_sum_yesterday%8
@@ -86,3 +165,4 @@ if __name__ == '__main__':
     print('\n\n\n\n\n\n========变卦========')
     for line in biangua.readlines():
         print(line,end="")
+    '''
